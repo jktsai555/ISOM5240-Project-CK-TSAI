@@ -440,4 +440,24 @@ if st.button("🚀 Process Phone Banking Enquiry", type="primary"):
       st.success(f"✅ **Action Decision: {triage['Decision']}**")
 
     # Detailed Dispatch Summary Table
-    st.markdown("#### 📋 Operational Routing Disp
+    st.markdown("#### 📋 Operational Routing Dispatch")
+    st.table({
+        "Attribute": [
+            "Assigned Service Queue",
+            "Recommended Operational Action",
+            "Customer Experience Path",
+        ],
+        "Details": [
+            triage["Assigned Queue"],
+            triage["Recommended Action"],
+            (
+                "Immediate Escalation to Human Specialist"
+                if triage["Priority"] == "Critical"
+                else (
+                    "Single Voice Confirmation -> Automated Routing"
+                    if triage["Priority"] == "Standard"
+                    else "Direct Self-Service Execution (Zero Keypad Menus)"
+                )
+            ),
+        ],
+    })
