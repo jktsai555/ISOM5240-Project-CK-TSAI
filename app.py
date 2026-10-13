@@ -213,7 +213,7 @@ def load_pipelines():
   # Pipeline 2: Custom Fine-tuned DistilBERT on Banking77 (~260MB)
   intent_pipe = pipeline(
       "text-classification",
-      model="Cktsai/scb-banking77-distilbert-test_2",
+      model="Cktsai/scb-banking77-distilbert-test-3",
       device=device,
   )
 
@@ -332,7 +332,7 @@ with st.sidebar:
   st.divider()
   st.caption("Architecture Specifications:")
   st.caption("• Pipeline 1: `openai/whisper-tiny` (ASR)")
-  st.caption("• Pipeline 2: `Cktsai/scb-banking77-distilbert-test_2`")
+  st.caption("• Pipeline 2: `Cktsai/scb-banking77-distilbert-test-3`")
   st.caption("• Decision Engine: Dual-Threshold (45% / 75%)")
 
 # ==============================================================================
