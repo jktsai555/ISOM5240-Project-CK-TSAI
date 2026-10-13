@@ -2,6 +2,7 @@ import os
 import tempfile
 from typing import Dict, Tuple
 import numpy as np
+import soundfile as sf
 import streamlit as st
 import torch
 from transformers import pipeline
@@ -227,9 +228,17 @@ asr_pipe, intent_pipe = load_pipelines()
 # Pipeline & Decision Functions
 # ==============================================================================
 def audio2text(audio_path: str) -> str:
-  """Stage 1: Transcribe customer spoken audio into English text using Whisper-tiny."""
+  """Stage 1: Transcribe audio using soundfile (No ffmpeg system dependency)."""
+  speech_array, sampling_rate = sf.read(audio_path)
+
+  # 如果是雙聲道 (Stereo)，轉為單聲道 (Mono)
+  if len(speech_array.shape) > 1:
+    speech_array = speech_array.mean(axis=1)
+
+  # 餵入 ASR Pipeline，使用純 Python 陣列解碼
   results = asr_pipe(
-      audio_path, generate_kwargs={"language": "english", "task": "transcribe"}
+      {"raw": speech_array.astype(np.float32), "sampling_rate": sampling_rate},
+      generate_kwargs={"language": "english", "task": "transcribe"},
   )
   return results["text"].strip()
 
@@ -370,7 +379,8 @@ with col_text:
                   if demo_choice == "Demo 3: Exchange Rate Query (Routine)"
                   else (
                       "Um... yeah maybe something is wrong with my thing..."
-                      if demo_choice == "Demo 4: Mumbled / Low Confidence Speech"
+                      if demo_choice
+                      == "Demo 4: Mumbled / Low Confidence Speech"
                       else ""
                   )
               )
