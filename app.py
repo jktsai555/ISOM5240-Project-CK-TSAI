@@ -8,73 +8,212 @@ import torch
 from transformers import pipeline
 
 # ==============================================================================
-# Page Configuration & Gentle SCB Theme Styling (Blue & Green Pastel)
+# Page Configuration & Institutional Banking Styling (Fixed Dimensions, No Emojis)
 # ==============================================================================
 st.set_page_config(
-    page_title="SCB Conversational Phone Banking Triage",
-    page_icon="🏦",
+    page_title="Standard Chartered | Voice Triage System",
     layout="wide",
 )
 
-# Custom CSS for Standard Chartered Gentle Blue & Green Palette
 st.markdown(
     """
     <style>
-    /* Gentle background gradient with SCB soft blue and mint green */
+    /* Hide Streamlit default header/footer clutter for a clean banking UI */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+
+    /* Gentle Standard Chartered Blue-Green Pastel Background */
     .stApp {
-        background: linear-gradient(135deg, #F4F9FC 0%, #F2F9F5 100%);
+        background: linear-gradient(135deg, #F5F9FC 0%, #F3F9F6 100%);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
-    
-    /* Main Title Styling */
+
+    /* Lock main container width so layout stays fixed regardless of window resizing */
+    .block-container {
+        width: 920px !important;
+        max-width: 920px !important;
+        min-width: 920px !important;
+        margin: 0 auto !important;
+        padding-top: 2.2rem !important;
+        padding-bottom: 3rem !important;
+    }
+
+    /* Main Title */
     .scb-title {
-        color: #0B4F6C;
-        font-size: 2.1rem;
-        font-weight: 700;
-        margin-top: 0.2rem;
+        color: #0B3C5D;
+        font-size: 1.65rem;
+        font-weight: 600;
+        margin-top: 0.5rem;
         margin-bottom: 1.5rem;
-        letter-spacing: -0.5px;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #D9E6F2;
+        letter-spacing: -0.3px;
     }
-    
+
     /* Section Headers */
     .section-header {
-        color: #0072CE;
-        font-size: 1.35rem;
-        font-weight: 600;
-        margin-top: 1rem;
-        margin-bottom: 0.8rem;
-        border-left: 5px solid #38D200;
-        padding-left: 12px;
+        color: #005A9C;
+        font-size: 0.95rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-top: 1.2rem;
+        margin-bottom: 0.75rem;
+        border-left: 4px solid #2EB872;
+        padding-left: 10px;
     }
 
-    /* Metric Cards Styling */
-    div[data-testid="stMetric"] {
+    /* Fixed-Size 3-Card Row (Total width: 280*3 + 16*2 = 872px) */
+    .metrics-grid {
+        display: flex;
+        flex-direction: row;
+        gap: 16px;
+        width: 872px;
+        margin-bottom: 14px;
+    }
+
+    .metric-box {
+        width: 280px;
+        min-width: 280px;
+        max-width: 280px;
+        height: 105px;
+        min-height: 105px;
+        max-height: 105px;
         background-color: #FFFFFF;
-        border: 1px solid #D5E8F2;
-        border-top: 4px solid #0072CE;
-        border-radius: 12px;
-        padding: 16px 20px;
-        box-shadow: 0 4px 12px rgba(0, 114, 206, 0.05);
+        border: 1px solid #D5E3EE;
+        border-top: 3px solid #0072CE;
+        border-radius: 6px;
+        padding: 14px 18px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: 0 2px 6px rgba(11, 60, 93, 0.04);
     }
 
-    /* Transcript Box at the bottom */
-    .transcript-box {
-        background-color: #EBF5FB;
-        border-left: 4px solid #0072CE;
-        color: #1B4F72;
-        padding: 14px 18px;
-        border-radius: 8px;
+    .metric-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #627D98;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Identical font size across all 3 metric outputs */
+    .metric-value {
         font-size: 1.05rem;
-        margin-top: 1rem;
+        font-weight: 700;
+        color: #102A43;
+        line-height: 1.3;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        overflow: hidden;
+    }
+
+    /* Fixed-Size Highlighted Action Decision Box (872px x 72px) */
+    .decision-box {
+        width: 872px;
+        min-width: 872px;
+        max-width: 872px;
+        height: 72px;
+        min-height: 72px;
+        max-height: 72px;
+        border-radius: 6px;
+        padding: 0 20px;
+        margin-bottom: 14px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .decision-critical {
+        background-color: #FDF2F2;
+        border: 1px solid #F5C6CB;
+        border-left: 5px solid #C92A2A;
+        color: #842029;
+    }
+
+    .decision-warning {
+        background-color: #FFF9DB;
+        border: 1px solid #FFEEBA;
+        border-left: 5px solid #E67700;
+        color: #664D03;
+    }
+
+    .decision-standard {
+        background-color: #EBF5FB;
+        border: 1px solid #B8DAFF;
+        border-left: 5px solid #0072CE;
+        color: #084298;
+    }
+
+    .decision-routine {
+        background-color: #EBFBEE;
+        border: 1px solid #C3E6CB;
+        border-left: 5px solid #2B8A3E;
+        color: #0F5132;
+    }
+
+    .box-caption {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        opacity: 0.85;
+        margin-bottom: 3px;
+    }
+
+    .box-content {
+        font-size: 1.0rem;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Fixed-Size Transcribed Spoken Enquiry Box (872px x 72px) */
+    .transcript-box {
+        width: 872px;
+        min-width: 872px;
+        max-width: 872px;
+        height: 72px;
+        min-height: 72px;
+        max-height: 72px;
+        background-color: #FFFFFF;
+        border: 1px solid #D5E3EE;
+        border-left: 5px solid #2EB872;
+        border-radius: 6px;
+        padding: 0 20px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        color: #243B53;
+    }
+
+    /* Fixed width for audio recorder widget */
+    div[data-testid="stAudioInput"] {
+        width: 872px !important;
+        max-width: 872px !important;
+    }
+
+    div[data-testid="stExpander"] {
+        width: 872px !important;
+        max-width: 872px !important;
+        background-color: #FFFFFF;
+        border: 1px solid #D5E3EE;
+        border-radius: 6px;
     }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-# 2 & 3. Standard Chartered Logo & Clean Title
+# Brand Header & Main Title
 st.image(
     "https://upload.wikimedia.org/wikipedia/commons/0/0c/Standard_Chartered_%282021%29.svg",
-    width=210,
+    width=185,
 )
 st.markdown(
     '<div class="scb-title">Conversational Voice-Routing & Enquiry Triage Prototype</div>',
@@ -256,7 +395,7 @@ ID2LABEL_DICT = {i: name for i, name in enumerate(BANKING77_LABELS)}
 # ==============================================================================
 # Model Loading with Resource Caching
 # ==============================================================================
-@st.cache_resource(show_spinner="Loading Deep Learning Models...")
+@st.cache_resource(show_spinner="Initializing Banking Models...")
 def load_pipelines():
     device = 0 if torch.cuda.is_available() else -1
     asr_pipe = pipeline(
@@ -279,7 +418,7 @@ asr_pipe, intent_pipe = load_pipelines()
 # Pipeline & Decision Functions
 # ==============================================================================
 def audio2text(audio_path: str) -> str:
-    """Stage 1: Transcribe audio using soundfile (No ffmpeg system dependency)."""
+    """Stage 1: Transcribe audio using soundfile."""
     speech_array, sampling_rate = sf.read(audio_path)
     if len(speech_array.shape) > 1:
         speech_array = speech_array.mean(axis=1)
@@ -326,27 +465,27 @@ def make_routing_decision(
         priority = "Unknown"
 
     if confidence < low_threshold:
-        decision = "REPEAT_ENQUIRY — Ask Customer to Repeat Question"
-        badge_type = "warning"
+        decision = "REPEAT_ENQUIRY — Request Customer to Repeat Enquiry"
+        style_class = "decision-warning"
     elif priority == "Critical":
-        decision = "ESCALATE_HUMAN — Immediate Transfer to Human Fraud Specialist"
-        badge_type = "error"
+        decision = "ESCALATE_HUMAN — Immediate Transfer to Fraud & Security Specialist"
+        style_class = "decision-critical"
     elif confidence < high_threshold:
-        decision = "ROUTE_HUMAN — Transfer to General Customer Service Agent"
-        badge_type = "warning"
+        decision = "ROUTE_HUMAN — Transfer to General Customer Service Representative"
+        style_class = "decision-warning"
     elif priority == "Standard":
-        decision = f"CONFIRM_THEN_ROUTE — Confirm '{intent}' & Route to Specialist Queue"
-        badge_type = "info"
+        decision = f"CONFIRM_THEN_ROUTE — Confirm '{intent}' and Route to Specialist Queue"
+        style_class = "decision-standard"
     else:
-        decision = f"AUTOMATED_SERVICE — Direct to Self-Service Voice Menu ('{intent}')"
-        badge_type = "success"
+        decision = f"AUTOMATED_SERVICE — Direct to Automated Voice Service ('{intent}')"
+        style_class = "decision-routine"
 
     return {
         "Intent": intent,
         "Confidence": f"{confidence:.2%}",
         "Priority": priority,
         "Decision": decision,
-        "_badge_type": badge_type,
+        "_style_class": style_class,
     }
 
 
@@ -354,34 +493,34 @@ def make_routing_decision(
 # Sidebar - Presets & Model Architecture
 # ==============================================================================
 with st.sidebar:
-    st.header("⚙️ Presets & Configuration")
+    st.markdown("**Simulation Control**")
     demo_choice = st.selectbox(
-        "Quick Demo Scenarios:",
+        "Select Preset Scenario:",
         [
-            "None (Use Live Voice)",
-            "Demo 1: Stolen Card (Critical)",
-            "Demo 2: ATM Cash Not Dispensed (Standard)",
-            "Demo 3: Exchange Rate Query (Routine)",
-            "Demo 4: Mumbled / Low Confidence Speech",
+            "Live Microphone Input",
+            "Preset 1: Stolen Card (Critical)",
+            "Preset 2: ATM Cash Error (Standard)",
+            "Preset 3: Exchange Rate (Routine)",
+            "Preset 4: Unclear Speech (Low Confidence)",
         ],
     )
     st.divider()
-    st.caption("Architecture Specifications:")
-    st.caption("• Pipeline 1: `openai/whisper-tiny`")
-    st.caption("• Pipeline 2: `Cktsai/scb-banking77-distilbert-test-3`")
-    st.caption("• Thresholds: Low < 45% | High >= 75%")
+    st.caption("System Specifications")
+    st.caption("ASR Model: openai/whisper-tiny")
+    st.caption("Classifier: scb-banking77-distilbert-test-3")
+    st.caption("Thresholds: Low < 45% | High >= 75%")
 
 # ==============================================================================
-# Main Interactive Interface (Auto-Trigger without Button)
+# Main Interface (Fixed-Size Containers, Auto-Trigger)
 # ==============================================================================
 st.markdown(
     '<div class="section-header">Input Customer Speech (Simulate Customer\'s inquiry in phone banking)</div>',
     unsafe_allow_html=True,
 )
 
-recorded_audio = st.audio_input("🎙️ Record Voice Enquiry")
+recorded_audio = st.audio_input("Record Voice Enquiry")
 
-with st.expander("📂 Optional: Upload Audio File or Enter Text Fallback"):
+with st.expander("Alternative Input: Upload Audio File or Enter Text"):
     col_upload, col_text = st.columns([1, 1])
     with col_upload:
         uploaded_audio = st.file_uploader(
@@ -390,19 +529,19 @@ with st.expander("📂 Optional: Upload Audio File or Enter Text Fallback"):
         )
     with col_text:
         custom_text_fallback = st.text_area(
-            "Or type spoken text:",
+            "Direct Text Input:",
             value=(
                 "I lost my credit card yesterday, please freeze my account immediately."
-                if demo_choice == "Demo 1: Stolen Card (Critical)"
+                if demo_choice == "Preset 1: Stolen Card (Critical)"
                 else (
                     "I withdrew money at the ATM but the machine didn't dispense cash although my balance was deducted."
-                    if demo_choice == "Demo 2: ATM Cash Not Dispensed (Standard)"
+                    if demo_choice == "Preset 2: ATM Cash Error (Standard)"
                     else (
                         "What is the current foreign exchange rate for Japanese Yen?"
-                        if demo_choice == "Demo 3: Exchange Rate Query (Routine)"
+                        if demo_choice == "Preset 3: Exchange Rate (Routine)"
                         else (
                             "Um... yeah maybe something is wrong with my thing..."
-                            if demo_choice == "Demo 4: Mumbled / Low Confidence Speech"
+                            if demo_choice == "Preset 4: Unclear Speech (Low Confidence)"
                             else ""
                         )
                     )
@@ -411,12 +550,12 @@ with st.expander("📂 Optional: Upload Audio File or Enter Text Fallback"):
             height=80,
         )
 
-# Automatically process as soon as audio is recorded/uploaded or preset text is active
+# Auto-trigger pipeline execution
 transcript_output = ""
 audio_source = recorded_audio or uploaded_audio
 
 if audio_source is not None:
-    with st.spinner("Transcribing and analyzing voice enquiry..."):
+    with st.spinner("Processing voice enquiry..."):
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
             tmp.write(audio_source.read())
             tmp_path = tmp.name
@@ -429,10 +568,9 @@ elif custom_text_fallback.strip():
     transcript_output = custom_text_fallback.strip()
 
 # ==============================================================================
-# Output Section: Analysis & Triage Decision
+# Output Section: Analysis & Triage Decision (Fixed-Size Boxes)
 # ==============================================================================
 if transcript_output:
-    st.divider()
     st.markdown(
         '<div class="section-header">Analysis & Triage Decision</div>',
         unsafe_allow_html=True,
@@ -441,25 +579,31 @@ if transcript_output:
     intent_predicted, conf_score = text2intent(transcript_output)
     triage = make_routing_decision(intent_predicted, conf_score)
 
-    # 7. Only 3 Core Metrics: Predicted Intent, Confidence Score, Priority Level
-    m1, m2, m3 = st.columns(3)
-    m1.metric("Predicted Intent", triage["Intent"])
-    m2.metric("Confidence Score", triage["Confidence"])
-    m3.metric("Priority Level", triage["Priority"])
-
-    # Highlighted Action Decision right below metrics
-    badge = triage["_badge_type"]
-    if badge == "error":
-        st.error(f"🚨 **Action Decision:** {triage['Decision']}")
-    elif badge == "warning":
-        st.warning(f"⚠️ **Action Decision:** {triage['Decision']}")
-    elif badge == "info":
-        st.info(f"⚖️ **Action Decision:** {triage['Decision']}")
-    else:
-        st.success(f"✅ **Action Decision:** {triage['Decision']}")
-
-    # 8. Transcribed Spoken Enquiry placed at the very bottom
+    # Fixed-size 3-column metrics + Fixed-size Decision + Fixed-size Transcript
     st.markdown(
-        f'<div class="transcript-box">🎙️ <b>Transcribed Spoken Enquiry:</b> <i>"{transcript_output}"</i></div>',
+        f"""
+        <div class="metrics-grid">
+            <div class="metric-box">
+                <div class="metric-label">Predicted Intent</div>
+                <div class="metric-value">{triage["Intent"]}</div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-label">Confidence Score</div>
+                <div class="metric-value">{triage["Confidence"]}</div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-label">Priority Level</div>
+                <div class="metric-value">{triage["Priority"]}</div>
+            </div>
+        </div>
+        <div class="decision-box {triage["_style_class"]}">
+            <div class="box-caption">Action Decision</div>
+            <div class="box-content">{triage["Decision"]}</div>
+        </div>
+        <div class="transcript-box">
+            <div class="box-caption" style="color: #627D98;">Transcribed Spoken Enquiry</div>
+            <div class="box-content" style="font-weight: 500;">"{transcript_output}"</div>
+        </div>
+        """,
         unsafe_allow_html=True,
     )
