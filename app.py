@@ -8,7 +8,7 @@ import torch
 from transformers import pipeline
 
 # ==============================================================================
-# Page Configuration & Styling
+# Page Configuration & Gentle SCB Theme Styling (Blue & Green Pastel)
 # ==============================================================================
 st.set_page_config(
     page_title="SCB Conversational Phone Banking Triage",
@@ -16,19 +16,73 @@ st.set_page_config(
     layout="wide",
 )
 
-st.title("🏦 Standard Chartered Hong Kong")
-st.subheader("Conversational Voice-Routing & Enquiry Triage Prototype")
+# Custom CSS for Standard Chartered Gentle Blue & Green Palette
 st.markdown(
     """
-This prototype demonstrates conversational voice-routing for phone banking, replacing complex multi-level 
-keypad menus. Customers speak their banking requests naturally in English, and the system dynamically determines 
-whether to route to automated self-service, request single voice confirmation, or escalate to human specialists.
-"""
+    <style>
+    /* Gentle background gradient with SCB soft blue and mint green */
+    .stApp {
+        background: linear-gradient(135deg, #F4F9FC 0%, #F2F9F5 100%);
+    }
+    
+    /* Main Title Styling */
+    .scb-title {
+        color: #0B4F6C;
+        font-size: 2.1rem;
+        font-weight: 700;
+        margin-top: 0.2rem;
+        margin-bottom: 1.5rem;
+        letter-spacing: -0.5px;
+    }
+    
+    /* Section Headers */
+    .section-header {
+        color: #0072CE;
+        font-size: 1.35rem;
+        font-weight: 600;
+        margin-top: 1rem;
+        margin-bottom: 0.8rem;
+        border-left: 5px solid #38D200;
+        padding-left: 12px;
+    }
+
+    /* Metric Cards Styling */
+    div[data-testid="stMetric"] {
+        background-color: #FFFFFF;
+        border: 1px solid #D5E8F2;
+        border-top: 4px solid #0072CE;
+        border-radius: 12px;
+        padding: 16px 20px;
+        box-shadow: 0 4px 12px rgba(0, 114, 206, 0.05);
+    }
+
+    /* Transcript Box at the bottom */
+    .transcript-box {
+        background-color: #EBF5FB;
+        border-left: 4px solid #0072CE;
+        color: #1B4F72;
+        padding: 14px 18px;
+        border-radius: 8px;
+        font-size: 1.05rem;
+        margin-top: 1rem;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# 2 & 3. Standard Chartered Logo & Clean Title
+st.image(
+    "https://upload.wikimedia.org/wikipedia/commons/0/0c/Standard_Chartered_%282021%29.svg",
+    width=210,
+)
+st.markdown(
+    '<div class="scb-title">Conversational Voice-Routing & Enquiry Triage Prototype</div>',
+    unsafe_allow_html=True,
 )
 
 # ==============================================================================
-# Domain Taxonomy & Priority Sets (Internal Alignment Appendix A)
-# Total: 77 Classes (8 Critical, 38 Standard, 31 Routine)
+# Domain Taxonomy & Priority Sets (77 Classes)
 # ==============================================================================
 CRITICAL_INTENTS = {
     "cancel_transfer",
@@ -202,23 +256,20 @@ ID2LABEL_DICT = {i: name for i, name in enumerate(BANKING77_LABELS)}
 # ==============================================================================
 # Model Loading with Resource Caching
 # ==============================================================================
-@st.cache_resource(show_spinner="Loading Deep Learning Models into Memory...")
+@st.cache_resource(show_spinner="Loading Deep Learning Models...")
 def load_pipelines():
-  device = 0 if torch.cuda.is_available() else -1
-
-  # Pipeline 1: Whisper Tiny ASR (~39MB)
-  asr_pipe = pipeline(
-      "automatic-speech-recognition", model="openai/whisper-tiny", device=device
-  )
-
-  # Pipeline 2: Custom Fine-tuned DistilBERT on Banking77 (~260MB)
-  intent_pipe = pipeline(
-      "text-classification",
-      model="Cktsai/scb-banking77-distilbert-test-3",
-      device=device,
-  )
-
-  return asr_pipe, intent_pipe
+    device = 0 if torch.cuda.is_available() else -1
+    asr_pipe = pipeline(
+        "automatic-speech-recognition",
+        model="openai/whisper-tiny",
+        device=device,
+    )
+    intent_pipe = pipeline(
+        "text-classification",
+        model="Cktsai/scb-banking77-distilbert-test-3",
+        device=device,
+    )
+    return asr_pipe, intent_pipe
 
 
 asr_pipe, intent_pipe = load_pipelines()
@@ -228,37 +279,34 @@ asr_pipe, intent_pipe = load_pipelines()
 # Pipeline & Decision Functions
 # ==============================================================================
 def audio2text(audio_path: str) -> str:
-  """Stage 1: Transcribe audio using soundfile (No ffmpeg system dependency)."""
-  speech_array, sampling_rate = sf.read(audio_path)
+    """Stage 1: Transcribe audio using soundfile (No ffmpeg system dependency)."""
+    speech_array, sampling_rate = sf.read(audio_path)
+    if len(speech_array.shape) > 1:
+        speech_array = speech_array.mean(axis=1)
 
-  # 如果是雙聲道 (Stereo)，轉為單聲道 (Mono)
-  if len(speech_array.shape) > 1:
-    speech_array = speech_array.mean(axis=1)
-
-  # 餵入 ASR Pipeline，使用純 Python 陣列解碼
-  results = asr_pipe(
-      {"raw": speech_array.astype(np.float32), "sampling_rate": sampling_rate},
-      generate_kwargs={"language": "english", "task": "transcribe"},
-  )
-  return results["text"].strip()
+    results = asr_pipe(
+        {"raw": speech_array.astype(np.float32), "sampling_rate": sampling_rate},
+        generate_kwargs={"language": "english", "task": "transcribe"},
+    )
+    return results["text"].strip()
 
 
 def text2intent(transcript: str) -> Tuple[str, float]:
-  """Stage 2: Classify transcript into Banking77 intent label with confidence score."""
-  result = intent_pipe(transcript)[0]
-  raw_label = result["label"]
-  confidence_score = float(result["score"])
+    """Stage 2: Classify transcript into Banking77 intent label with confidence score."""
+    result = intent_pipe(transcript)[0]
+    raw_label = result["label"]
+    confidence_score = float(result["score"])
 
-  if raw_label.startswith("LABEL_"):
-    label_id = int(raw_label.replace("LABEL_", ""))
-    intent_label = ID2LABEL_DICT.get(label_id, raw_label)
-  elif raw_label.isdigit():
-    label_id = int(raw_label)
-    intent_label = ID2LABEL_DICT.get(label_id, raw_label)
-  else:
-    intent_label = raw_label
+    if raw_label.startswith("LABEL_"):
+        label_id = int(raw_label.replace("LABEL_", ""))
+        intent_label = ID2LABEL_DICT.get(label_id, raw_label)
+    elif raw_label.isdigit():
+        label_id = int(raw_label)
+        intent_label = ID2LABEL_DICT.get(label_id, raw_label)
+    else:
+        intent_label = raw_label
 
-  return intent_label, confidence_score
+    return intent_label, confidence_score
 
 
 def make_routing_decision(
@@ -267,207 +315,151 @@ def make_routing_decision(
     high_threshold: float = 0.75,
     low_threshold: float = 0.45,
 ) -> Dict[str, str]:
-  """Stage 3: Decision Engine based on Banking77 Intent, Priority, and Confidence."""
-  if intent in CRITICAL_INTENTS:
-    priority = "Critical"
-  elif intent in STANDARD_INTENTS:
-    priority = "Standard"
-  elif intent in ROUTINE_INTENTS:
-    priority = "Routine"
-  else:
-    priority = "Unknown"
+    """Stage 3: Decision Engine based on Banking77 Intent, Priority, and Confidence."""
+    if intent in CRITICAL_INTENTS:
+        priority = "Critical"
+    elif intent in STANDARD_INTENTS:
+        priority = "Standard"
+    elif intent in ROUTINE_INTENTS:
+        priority = "Routine"
+    else:
+        priority = "Unknown"
 
-  if confidence < low_threshold:
-    decision = "REPEAT_ENQUIRY"
-    badge_type = "warning"
-    action = (
-        "Audio unclear / low confidence. System requests customer to repeat the"
-        " enquiry."
-    )
-    queue = "Automated Clarification Prompt"
-  elif priority == "Critical":
-    decision = "ESCALATE_HUMAN"
-    badge_type = "error"
-    action = (
-        "Immediate escalation to Human Fraud / Security Specialist. Bypass"
-        " automated menus."
-    )
-    queue = "Emergency Card & Security Support"
-  elif confidence < high_threshold:
-    decision = "ROUTE_HUMAN"
-    badge_type = "warning"
-    action = f"Moderate confidence ({confidence:.1%}). Safely route to general customer service agent."
-    queue = "General Customer Service Queue"
-  elif priority == "Standard":
-    decision = "CONFIRM_THEN_ROUTE"
-    badge_type = "info"
-    action = f"Read back detected need '{intent}' and ask customer for single confirmation before routing."
-    queue = "Specialist Automated Routing Queue"
-  else:
-    decision = "AUTOMATED_SERVICE"
-    badge_type = "success"
-    action = f"High confidence routine enquiry. Direct customer into automated voice menu for '{intent}'."
-    queue = "Self-Service Digital Voice Menu"
+    if confidence < low_threshold:
+        decision = "REPEAT_ENQUIRY — Ask Customer to Repeat Question"
+        badge_type = "warning"
+    elif priority == "Critical":
+        decision = "ESCALATE_HUMAN — Immediate Transfer to Human Fraud Specialist"
+        badge_type = "error"
+    elif confidence < high_threshold:
+        decision = "ROUTE_HUMAN — Transfer to General Customer Service Agent"
+        badge_type = "warning"
+    elif priority == "Standard":
+        decision = f"CONFIRM_THEN_ROUTE — Confirm '{intent}' & Route to Specialist Queue"
+        badge_type = "info"
+    else:
+        decision = f"AUTOMATED_SERVICE — Direct to Self-Service Voice Menu ('{intent}')"
+        badge_type = "success"
 
-  return {
-      "Intent": intent,
-      "Confidence": f"{confidence:.2%}",
-      "Priority": priority,
-      "Decision": decision,
-      "Recommended Action": action,
-      "Assigned Queue": queue,
-      "_badge_type": badge_type,
-  }
+    return {
+        "Intent": intent,
+        "Confidence": f"{confidence:.2%}",
+        "Priority": priority,
+        "Decision": decision,
+        "_badge_type": badge_type,
+    }
 
 
 # ==============================================================================
 # Sidebar - Presets & Model Architecture
 # ==============================================================================
 with st.sidebar:
-  st.header("⚙️ Presets & Configuration")
-  st.markdown("Select a preset scenario if microphone is unavailable:")
-
-  demo_choice = st.selectbox(
-      "Preset Scenarios:",
-      [
-          "None (Use Live Voice / Custom Input)",
-          "Demo 1: Stolen Card (Critical)",
-          "Demo 2: ATM Cash Not Dispensed (Standard)",
-          "Demo 3: Exchange Rate Query (Routine)",
-          "Demo 4: Mumbled / Low Confidence Speech",
-      ],
-  )
-
-  st.divider()
-  st.caption("Architecture Specifications:")
-  st.caption("• Pipeline 1: `openai/whisper-tiny` (ASR)")
-  st.caption("• Pipeline 2: `Cktsai/scb-banking77-distilbert-test-3`")
-  st.caption("• Decision Engine: Dual-Threshold (45% / 75%)")
+    st.header("⚙️ Presets & Configuration")
+    demo_choice = st.selectbox(
+        "Quick Demo Scenarios:",
+        [
+            "None (Use Live Voice)",
+            "Demo 1: Stolen Card (Critical)",
+            "Demo 2: ATM Cash Not Dispensed (Standard)",
+            "Demo 3: Exchange Rate Query (Routine)",
+            "Demo 4: Mumbled / Low Confidence Speech",
+        ],
+    )
+    st.divider()
+    st.caption("Architecture Specifications:")
+    st.caption("• Pipeline 1: `openai/whisper-tiny`")
+    st.caption("• Pipeline 2: `Cktsai/scb-banking77-distilbert-test-3`")
+    st.caption("• Thresholds: Low < 45% | High >= 75%")
 
 # ==============================================================================
-# Main Interactive Interface
+# Main Interactive Interface (Auto-Trigger without Button)
 # ==============================================================================
-st.markdown("### Step 1: Input Customer Speech")
-st.write(
-    "Click the microphone button to record your banking enquiry directly from"
-    " your browser:"
+st.markdown(
+    '<div class="section-header">Input Customer Speech (Simulate Customer\'s inquiry in phone banking)</div>',
+    unsafe_allow_html=True,
 )
 
-# 即時麥克風錄音輸入
 recorded_audio = st.audio_input("🎙️ Record Voice Enquiry")
 
-col_upload, col_text = st.columns([1, 1])
+with st.expander("📂 Optional: Upload Audio File or Enter Text Fallback"):
+    col_upload, col_text = st.columns([1, 1])
+    with col_upload:
+        uploaded_audio = st.file_uploader(
+            "Upload Audio (.wav, .mp3, .flac)",
+            type=["wav", "mp3", "flac", "ogg"],
+        )
+    with col_text:
+        custom_text_fallback = st.text_area(
+            "Or type spoken text:",
+            value=(
+                "I lost my credit card yesterday, please freeze my account immediately."
+                if demo_choice == "Demo 1: Stolen Card (Critical)"
+                else (
+                    "I withdrew money at the ATM but the machine didn't dispense cash although my balance was deducted."
+                    if demo_choice == "Demo 2: ATM Cash Not Dispensed (Standard)"
+                    else (
+                        "What is the current foreign exchange rate for Japanese Yen?"
+                        if demo_choice == "Demo 3: Exchange Rate Query (Routine)"
+                        else (
+                            "Um... yeah maybe something is wrong with my thing..."
+                            if demo_choice == "Demo 4: Mumbled / Low Confidence Speech"
+                            else ""
+                        )
+                    )
+                )
+            ),
+            height=80,
+        )
 
-with col_upload:
-  uploaded_audio = st.file_uploader(
-      "Or upload an audio file (.wav, .mp3, .flac)",
-      type=["wav", "mp3", "flac", "ogg"],
-  )
-
-with col_text:
-  custom_text_fallback = st.text_area(
-      "Or type/paste spoken enquiry text directly:",
-      value=(
-          "I lost my credit card yesterday, please freeze my account immediately."
-          if demo_choice == "Demo 1: Stolen Card (Critical)"
-          else (
-              "I withdrew money at the ATM but the machine didn't dispense cash"
-              " although my balance was deducted."
-              if demo_choice == "Demo 2: ATM Cash Not Dispensed (Standard)"
-              else (
-                  "What is the current foreign exchange rate for Japanese Yen?"
-                  if demo_choice == "Demo 3: Exchange Rate Query (Routine)"
-                  else (
-                      "Um... yeah maybe something is wrong with my thing..."
-                      if demo_choice
-                      == "Demo 4: Mumbled / Low Confidence Speech"
-                      else ""
-                  )
-              )
-          )
-      ),
-      height=90,
-  )
-
-# Trigger Button
+# Automatically process as soon as audio is recorded/uploaded or preset text is active
 transcript_output = ""
+audio_source = recorded_audio or uploaded_audio
 
-if st.button("🚀 Process Phone Banking Enquiry", type="primary"):
-  with st.spinner("Processing Voice through Deep Learning Pipelines..."):
-    audio_source = recorded_audio or uploaded_audio
+if audio_source is not None:
+    with st.spinner("Transcribing and analyzing voice enquiry..."):
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+            tmp.write(audio_source.read())
+            tmp_path = tmp.name
+        try:
+            transcript_output = audio2text(tmp_path)
+        finally:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+elif custom_text_fallback.strip():
+    transcript_output = custom_text_fallback.strip()
 
-    # Case A: Live Mic Recording or Uploaded Audio File
-    if audio_source is not None:
-      with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
-        tmp.write(audio_source.read())
-        tmp_path = tmp.name
-
-      try:
-        transcript_output = audio2text(tmp_path)
-      finally:
-        if os.path.exists(tmp_path):
-          os.remove(tmp_path)
-
-    # Case B: Direct Text / Preset
-    elif custom_text_fallback.strip():
-      transcript_output = custom_text_fallback.strip()
-    else:
-      st.error(
-          "Please record voice via microphone, upload an audio file, or enter"
-          " text."
-      )
-
-  # Step 2: Display Pipeline Analysis & Results
-  if transcript_output:
+# ==============================================================================
+# Output Section: Analysis & Triage Decision
+# ==============================================================================
+if transcript_output:
     st.divider()
     st.markdown(
-        "### Step 2: Multimodal Pipeline Analysis & Triage Decision"
+        '<div class="section-header">Analysis & Triage Decision</div>',
+        unsafe_allow_html=True,
     )
 
     intent_predicted, conf_score = text2intent(transcript_output)
     triage = make_routing_decision(intent_predicted, conf_score)
 
-    # Metrics Row
-    m1, m2, m3, m4 = st.columns(4)
-    m1.metric("1. ASR Transcript", f"{len(transcript_output.split())} Words")
-    m2.metric("2. Predicted Intent", triage["Intent"])
-    m3.metric("3. Confidence Score", triage["Confidence"])
-    m4.metric("4. Priority Level", triage["Priority"])
+    # 7. Only 3 Core Metrics: Predicted Intent, Confidence Score, Priority Level
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Predicted Intent", triage["Intent"])
+    m2.metric("Confidence Score", triage["Confidence"])
+    m3.metric("Priority Level", triage["Priority"])
 
-    st.markdown(
-        f"**Transcribed Spoken Enquiry:** *\"{transcript_output}\"*"
-    )
-
-    # Decision Banner
+    # Highlighted Action Decision right below metrics
     badge = triage["_badge_type"]
     if badge == "error":
-      st.error(f"🚨 **Action Decision: {triage['Decision']}**")
+        st.error(f"🚨 **Action Decision:** {triage['Decision']}")
     elif badge == "warning":
-      st.warning(f"⚠️ **Action Decision: {triage['Decision']}**")
+        st.warning(f"⚠️ **Action Decision:** {triage['Decision']}")
     elif badge == "info":
-      st.info(f"⚖️ **Action Decision: {triage['Decision']}**")
+        st.info(f"⚖️ **Action Decision:** {triage['Decision']}")
     else:
-      st.success(f"✅ **Action Decision: {triage['Decision']}**")
+        st.success(f"✅ **Action Decision:** {triage['Decision']}")
 
-    # Detailed Dispatch Summary Table
-    st.markdown("#### 📋 Operational Routing Dispatch")
-    st.table({
-        "Attribute": [
-            "Assigned Service Queue",
-            "Recommended Operational Action",
-            "Customer Experience Path",
-        ],
-        "Details": [
-            triage["Assigned Queue"],
-            triage["Recommended Action"],
-            (
-                "Immediate Escalation to Human Specialist"
-                if triage["Priority"] == "Critical"
-                else (
-                    "Single Voice Confirmation -> Automated Routing"
-                    if triage["Priority"] == "Standard"
-                    else "Direct Self-Service Execution (Zero Keypad Menus)"
-                )
-            ),
-        ],
-    })
+    # 8. Transcribed Spoken Enquiry placed at the very bottom
+    st.markdown(
+        f'<div class="transcript-box">🎙️ <b>Transcribed Spoken Enquiry:</b> <i>"{transcript_output}"</i></div>',
+        unsafe_allow_html=True,
+    )
