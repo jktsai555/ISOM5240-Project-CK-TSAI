@@ -8,212 +8,181 @@ import torch
 from transformers import pipeline
 
 # ==============================================================================
-# Page Configuration & Institutional Banking Styling (Fixed Dimensions, No Emojis)
+# Page Configuration & Gentle SCB Styling (No ALL CAPS, Fixed Width, Unified Card)
 # ==============================================================================
 st.set_page_config(
-    page_title="Standard Chartered | Voice Triage System",
+    page_title="Standard Chartered | Voice Triage",
     layout="wide",
 )
 
 st.markdown(
     """
-    <style>
-    /* Hide Streamlit default header/footer clutter for a clean banking UI */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
 
-    /* Gentle Standard Chartered Blue-Green Pastel Background */
-    .stApp {
-        background: linear-gradient(135deg, #F5F9FC 0%, #F3F9F6 100%);
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
+.stApp {
+    background: linear-gradient(135deg, #F5F9FC 0%, #F3F9F6 100%);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
 
-    /* Lock main container width so layout stays fixed regardless of window resizing */
-    .block-container {
-        width: 920px !important;
-        max-width: 920px !important;
-        min-width: 920px !important;
-        margin: 0 auto !important;
-        padding-top: 2.2rem !important;
-        padding-bottom: 3rem !important;
-    }
+/* Fixed container width so resizing browser never distorts boxes */
+.block-container {
+    width: 900px !important;
+    max-width: 900px !important;
+    min-width: 900px !important;
+    margin: 0 auto !important;
+    padding-top: 2rem !important;
+}
 
-    /* Main Title */
-    .scb-title {
-        color: #0B3C5D;
-        font-size: 1.65rem;
-        font-weight: 600;
-        margin-top: 0.5rem;
-        margin-bottom: 1.5rem;
-        padding-bottom: 0.75rem;
-        border-bottom: 2px solid #D9E6F2;
-        letter-spacing: -0.3px;
-    }
+.scb-title {
+    color: #0B3C5D;
+    font-size: 1.55rem;
+    font-weight: 600;
+    margin-top: 0.4rem;
+    margin-bottom: 1.4rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid #D9E6F2;
+}
 
-    /* Section Headers */
-    .section-header {
-        color: #005A9C;
-        font-size: 0.95rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.6px;
-        margin-top: 1.2rem;
-        margin-bottom: 0.75rem;
-        border-left: 4px solid #2EB872;
-        padding-left: 10px;
-    }
+.section-header {
+    color: #0066B2;
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.6rem;
+    border-left: 4px solid #38B2AC;
+    padding-left: 10px;
+}
 
-    /* Fixed-Size 3-Card Row (Total width: 280*3 + 16*2 = 872px) */
-    .metrics-grid {
-        display: flex;
-        flex-direction: row;
-        gap: 16px;
-        width: 872px;
-        margin-bottom: 14px;
-    }
+/* Unified Fixed-Size Triage Card (860px wide) */
+.triage-card {
+    width: 860px;
+    min-width: 860px;
+    max-width: 860px;
+    background-color: #FFFFFF;
+    border: 1px solid #DCE8F2;
+    border-radius: 10px;
+    box-shadow: 0 4px 14px rgba(11, 60, 93, 0.04);
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
 
-    .metric-box {
-        width: 280px;
-        min-width: 280px;
-        max-width: 280px;
-        height: 105px;
-        min-height: 105px;
-        max-height: 105px;
-        background-color: #FFFFFF;
-        border: 1px solid #D5E3EE;
-        border-top: 3px solid #0072CE;
-        border-radius: 6px;
-        padding: 14px 18px;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        box-shadow: 0 2px 6px rgba(11, 60, 93, 0.04);
-    }
+/* Top Row: 3 Equal Fixed Columns */
+.metrics-row {
+    display: flex;
+    flex-direction: row;
+    width: 860px;
+    height: 92px;
+    border-bottom: 1px solid #EDF2F7;
+}
 
-    .metric-label {
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: #627D98;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
+.metric-cell {
+    width: 286px;
+    min-width: 286px;
+    max-width: 286px;
+    padding: 16px 22px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-right: 1px solid #EDF2F7;
+}
 
-    /* Identical font size across all 3 metric outputs */
-    .metric-value {
-        font-size: 1.05rem;
-        font-weight: 700;
-        color: #102A43;
-        line-height: 1.3;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-        overflow: hidden;
-    }
+.metric-cell:last-child {
+    border-right: none;
+}
 
-    /* Fixed-Size Highlighted Action Decision Box (872px x 72px) */
-    .decision-box {
-        width: 872px;
-        min-width: 872px;
-        max-width: 872px;
-        height: 72px;
-        min-height: 72px;
-        max-height: 72px;
-        border-radius: 6px;
-        padding: 0 20px;
-        margin-bottom: 14px;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
+.cell-label {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #64748B;
+    margin-bottom: 4px;
+}
 
-    .decision-critical {
-        background-color: #FDF2F2;
-        border: 1px solid #F5C6CB;
-        border-left: 5px solid #C92A2A;
-        color: #842029;
-    }
+.cell-value {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #0F2942;
+    line-height: 1.25;
+}
 
-    .decision-warning {
-        background-color: #FFF9DB;
-        border: 1px solid #FFEEBA;
-        border-left: 5px solid #E67700;
-        color: #664D03;
-    }
+/* Middle Row: Highlighted Action Decision */
+.decision-row {
+    width: 860px;
+    height: 68px;
+    padding: 0 22px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-bottom: 1px solid #EDF2F7;
+}
 
-    .decision-standard {
-        background-color: #EBF5FB;
-        border: 1px solid #B8DAFF;
-        border-left: 5px solid #0072CE;
-        color: #084298;
-    }
+.decision-critical {
+    background-color: #FFF5F5;
+    border-left: 5px solid #E53E3E;
+    color: #9B2C2C;
+}
 
-    .decision-routine {
-        background-color: #EBFBEE;
-        border: 1px solid #C3E6CB;
-        border-left: 5px solid #2B8A3E;
-        color: #0F5132;
-    }
+.decision-warning {
+    background-color: #FFFAF0;
+    border-left: 5px solid #DD6B20;
+    color: #9C4221;
+}
 
-    .box-caption {
-        font-size: 0.72rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        opacity: 0.85;
-        margin-bottom: 3px;
-    }
+.decision-standard {
+    background-color: #F0F9FF;
+    border-left: 5px solid #0072CE;
+    color: #0C4A6E;
+}
 
-    .box-content {
-        font-size: 1.0rem;
-        font-weight: 600;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
+.decision-routine {
+    background-color: #F0FDF4;
+    border-left: 5px solid #2EB872;
+    color: #14532D;
+}
 
-    /* Fixed-Size Transcribed Spoken Enquiry Box (872px x 72px) */
-    .transcript-box {
-        width: 872px;
-        min-width: 872px;
-        max-width: 872px;
-        height: 72px;
-        min-height: 72px;
-        max-height: 72px;
-        background-color: #FFFFFF;
-        border: 1px solid #D5E3EE;
-        border-left: 5px solid #2EB872;
-        border-radius: 6px;
-        padding: 0 20px;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        color: #243B53;
-    }
+.decision-text {
+    font-size: 1.02rem;
+    font-weight: 600;
+}
 
-    /* Fixed width for audio recorder widget */
-    div[data-testid="stAudioInput"] {
-        width: 872px !important;
-        max-width: 872px !important;
-    }
+/* Bottom Row: Transcribed Spoken Enquiry */
+.transcript-row {
+    width: 860px;
+    height: 64px;
+    padding: 0 22px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-color: #FAFCFF;
+}
 
-    div[data-testid="stExpander"] {
-        width: 872px !important;
-        max-width: 872px !important;
-        background-color: #FFFFFF;
-        border: 1px solid #D5E3EE;
-        border-radius: 6px;
-    }
-    </style>
-    """,
+.transcript-text {
+    font-size: 0.96rem;
+    color: #334E68;
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+div[data-testid="stAudioInput"],
+div[data-testid="stExpander"] {
+    width: 860px !important;
+    max-width: 860px !important;
+}
+</style>
+""",
     unsafe_allow_html=True,
 )
 
 # Brand Header & Main Title
 st.image(
     "https://upload.wikimedia.org/wikipedia/commons/0/0c/Standard_Chartered_%282021%29.svg",
-    width=185,
+    width=175,
 )
 st.markdown(
     '<div class="scb-title">Conversational Voice-Routing & Enquiry Triage Prototype</div>',
@@ -418,7 +387,6 @@ asr_pipe, intent_pipe = load_pipelines()
 # Pipeline & Decision Functions
 # ==============================================================================
 def audio2text(audio_path: str) -> str:
-    """Stage 1: Transcribe audio using soundfile."""
     speech_array, sampling_rate = sf.read(audio_path)
     if len(speech_array.shape) > 1:
         speech_array = speech_array.mean(axis=1)
@@ -431,7 +399,6 @@ def audio2text(audio_path: str) -> str:
 
 
 def text2intent(transcript: str) -> Tuple[str, float]:
-    """Stage 2: Classify transcript into Banking77 intent label with confidence score."""
     result = intent_pipe(transcript)[0]
     raw_label = result["label"]
     confidence_score = float(result["score"])
@@ -454,7 +421,6 @@ def make_routing_decision(
     high_threshold: float = 0.75,
     low_threshold: float = 0.45,
 ) -> Dict[str, str]:
-    """Stage 3: Decision Engine based on Banking77 Intent, Priority, and Confidence."""
     if intent in CRITICAL_INTENTS:
         priority = "Critical"
     elif intent in STANDARD_INTENTS:
@@ -464,25 +430,28 @@ def make_routing_decision(
     else:
         priority = "Unknown"
 
+    # Friendly, readable intent name (e.g., "Lost or stolen card")
+    friendly_intent = intent.replace("_", " ").capitalize()
+
     if confidence < low_threshold:
-        decision = "REPEAT_ENQUIRY — Request Customer to Repeat Enquiry"
+        decision = "Please ask the customer to repeat their enquiry"
         style_class = "decision-warning"
     elif priority == "Critical":
-        decision = "ESCALATE_HUMAN — Immediate Transfer to Fraud & Security Specialist"
+        decision = "Immediate transfer to Fraud & Security Specialist"
         style_class = "decision-critical"
     elif confidence < high_threshold:
-        decision = "ROUTE_HUMAN — Transfer to General Customer Service Representative"
+        decision = "Transfer to General Customer Service Representative"
         style_class = "decision-warning"
     elif priority == "Standard":
-        decision = f"CONFIRM_THEN_ROUTE — Confirm '{intent}' and Route to Specialist Queue"
+        decision = f"Confirm '{friendly_intent}' with customer and route to Specialist Queue"
         style_class = "decision-standard"
     else:
-        decision = f"AUTOMATED_SERVICE — Direct to Automated Voice Service ('{intent}')"
+        decision = f"Direct to Automated Voice Service for '{friendly_intent}'"
         style_class = "decision-routine"
 
     return {
-        "Intent": intent,
-        "Confidence": f"{confidence:.2%}",
+        "Intent": friendly_intent,
+        "Confidence": f"{confidence:.1%}",
         "Priority": priority,
         "Decision": decision,
         "_style_class": style_class,
@@ -511,10 +480,10 @@ with st.sidebar:
     st.caption("Thresholds: Low < 45% | High >= 75%")
 
 # ==============================================================================
-# Main Interface (Fixed-Size Containers, Auto-Trigger)
+# Main Interface
 # ==============================================================================
 st.markdown(
-    '<div class="section-header">Input Customer Speech (Simulate Customer\'s inquiry in phone banking)</div>',
+    '<div class="section-header">Input Customer Speech</div>',
     unsafe_allow_html=True,
 )
 
@@ -550,7 +519,6 @@ with st.expander("Alternative Input: Upload Audio File or Enter Text"):
             height=80,
         )
 
-# Auto-trigger pipeline execution
 transcript_output = ""
 audio_source = recorded_audio or uploaded_audio
 
@@ -568,7 +536,7 @@ elif custom_text_fallback.strip():
     transcript_output = custom_text_fallback.strip()
 
 # ==============================================================================
-# Output Section: Analysis & Triage Decision (Fixed-Size Boxes)
+# Output Section: Analysis & Triage Decision (Single Unified Fixed Card)
 # ==============================================================================
 if transcript_output:
     st.markdown(
@@ -579,31 +547,21 @@ if transcript_output:
     intent_predicted, conf_score = text2intent(transcript_output)
     triage = make_routing_decision(intent_predicted, conf_score)
 
-    # Fixed-size 3-column metrics + Fixed-size Decision + Fixed-size Transcript
-    st.markdown(
-        f"""
-        <div class="metrics-grid">
-            <div class="metric-box">
-                <div class="metric-label">Predicted Intent</div>
-                <div class="metric-value">{triage["Intent"]}</div>
-            </div>
-            <div class="metric-box">
-                <div class="metric-label">Confidence Score</div>
-                <div class="metric-value">{triage["Confidence"]}</div>
-            </div>
-            <div class="metric-box">
-                <div class="metric-label">Priority Level</div>
-                <div class="metric-value">{triage["Priority"]}</div>
-            </div>
-        </div>
-        <div class="decision-box {triage["_style_class"]}">
-            <div class="box-caption">Action Decision</div>
-            <div class="box-content">{triage["Decision"]}</div>
-        </div>
-        <div class="transcript-box">
-            <div class="box-caption" style="color: #627D98;">Transcribed Spoken Enquiry</div>
-            <div class="box-content" style="font-weight: 500;">"{transcript_output}"</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
+    card_html = (
+        f'<div class="triage-card">'
+        f'<div class="metrics-row">'
+        f'<div class="metric-cell"><div class="cell-label">Predicted Intent</div><div class="cell-value">{triage["Intent"]}</div></div>'
+        f'<div class="metric-cell"><div class="cell-label">Confidence Score</div><div class="cell-value">{triage["Confidence"]}</div></div>'
+        f'<div class="metric-cell"><div class="cell-label">Priority Level</div><div class="cell-value">{triage["Priority"]}</div></div>'
+        f'</div>'
+        f'<div class="decision-row {triage["_style_class"]}">'
+        f'<div class="cell-label">Action Decision</div>'
+        f'<div class="decision-text">{triage["Decision"]}</div>'
+        f'</div>'
+        f'<div class="transcript-row">'
+        f'<div class="cell-label">Transcribed Spoken Enquiry</div>'
+        f'<div class="transcript-text">"{transcript_output}"</div>'
+        f'</div>'
+        f'</div>'
     )
+    st.markdown(card_html, unsafe_allow_html=True)
