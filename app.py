@@ -8,7 +8,7 @@ import torch
 from transformers import pipeline
 
 # ==============================================================================
-# Page Configuration & Gentle SCB Styling (No ALL CAPS, Fixed Width, Unified Card)
+# Page Configuration & Transparent Minimalist SCB Styling
 # ==============================================================================
 st.set_page_config(
     page_title="Standard Chartered | Voice Triage",
@@ -21,18 +21,23 @@ st.markdown(
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 
+header[data-testid="stHeader"] {
+    background: transparent !important;
+}
+
 .stApp {
     background: linear-gradient(135deg, #F5F9FC 0%, #F3F9F6 100%);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Fixed container width so resizing browser never distorts boxes */
+/* Fixed container width so resizing browser never distorts layout */
 .block-container {
     width: 900px !important;
     max-width: 900px !important;
     min-width: 900px !important;
     margin: 0 auto !important;
-    padding-top: 2rem !important;
+    padding-top: 4.2rem !important;
+    padding-bottom: 3rem !important;
 }
 
 .scb-title {
@@ -42,59 +47,51 @@ footer {visibility: hidden;}
     margin-top: 0.4rem;
     margin-bottom: 1.4rem;
     padding-bottom: 0.6rem;
-    border-bottom: 1px solid #D9E6F2;
+    border-bottom: 1px solid #D5E3EE;
 }
 
 .section-header {
     color: #0066B2;
-    font-size: 1.05rem;
+    font-size: 1.02rem;
     font-weight: 600;
-    margin-top: 1rem;
+    margin-top: 1.2rem;
     margin-bottom: 0.6rem;
-    border-left: 4px solid #38B2AC;
+    border-left: 3px solid #2EB872;
     padding-left: 10px;
 }
 
-/* Unified Fixed-Size Triage Card (860px wide) */
-.triage-card {
+/* Transparent Fixed-Size Outcome Container (No background fills) */
+.triage-container {
     width: 860px;
     min-width: 860px;
     max-width: 860px;
-    background-color: #FFFFFF;
-    border: 1px solid #DCE8F2;
-    border-radius: 10px;
-    box-shadow: 0 4px 14px rgba(11, 60, 93, 0.04);
-    overflow: hidden;
-    margin-top: 0.5rem;
+    background: transparent;
+    margin-top: 0.4rem;
 }
 
-/* Top Row: 3 Equal Fixed Columns */
+/* Top Row: 3 Equal Fixed Columns without white box fill */
 .metrics-row {
     display: flex;
     flex-direction: row;
     width: 860px;
-    height: 92px;
-    border-bottom: 1px solid #EDF2F7;
+    height: 78px;
+    border-top: 1px solid #D5E3EE;
+    border-bottom: 1px solid #D5E3EE;
 }
 
 .metric-cell {
     width: 286px;
     min-width: 286px;
     max-width: 286px;
-    padding: 16px 22px;
+    padding: 12px 16px 12px 0;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    border-right: 1px solid #EDF2F7;
-}
-
-.metric-cell:last-child {
-    border-right: none;
 }
 
 .cell-label {
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 500;
     color: #64748B;
     margin-bottom: 4px;
@@ -107,66 +104,56 @@ footer {visibility: hidden;}
     line-height: 1.25;
 }
 
-/* Middle Row: Highlighted Action Decision */
+/* Middle Row: Action Decision (Transparent background, colored text only) */
 .decision-row {
     width: 860px;
     height: 68px;
-    padding: 0 22px;
+    padding: 14px 0;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    border-bottom: 1px solid #EDF2F7;
-}
-
-.decision-critical {
-    background-color: #FFF5F5;
-    border-left: 5px solid #E53E3E;
-    color: #9B2C2C;
-}
-
-.decision-warning {
-    background-color: #FFFAF0;
-    border-left: 5px solid #DD6B20;
-    color: #9C4221;
-}
-
-.decision-standard {
-    background-color: #F0F9FF;
-    border-left: 5px solid #0072CE;
-    color: #0C4A6E;
-}
-
-.decision-routine {
-    background-color: #F0FDF4;
-    border-left: 5px solid #2EB872;
-    color: #14532D;
+    border-bottom: 1px solid #D5E3EE;
 }
 
 .decision-text {
-    font-size: 1.02rem;
-    font-weight: 600;
+    font-size: 1.12rem;
+    font-weight: 700;
 }
 
-/* Bottom Row: Transcribed Spoken Enquiry */
+/* Text Colors for Action Decision */
+.text-critical {
+    color: #C92A2A;
+}
+
+.text-standard {
+    color: #0072CE;
+}
+
+.text-routine {
+    color: #1E8E3E;
+}
+
+/* Bottom Row: Pushed down & smaller font for Transcribed Spoken Enquiry */
 .transcript-row {
     width: 860px;
-    height: 64px;
-    padding: 0 22px;
+    margin-top: 28px;
+    padding-top: 4px;
     box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    background-color: #FAFCFF;
+}
+
+.transcript-label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #829AB1;
+    margin-bottom: 2px;
 }
 
 .transcript-text {
-    font-size: 0.96rem;
-    color: #334E68;
+    font-size: 0.82rem;
+    color: #627D98;
     font-style: italic;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.4;
 }
 
 div[data-testid="stAudioInput"],
@@ -430,31 +417,30 @@ def make_routing_decision(
     else:
         priority = "Unknown"
 
-    # Friendly, readable intent name (e.g., "Lost or stolen card")
     friendly_intent = intent.replace("_", " ").capitalize()
 
     if confidence < low_threshold:
         decision = "Please ask the customer to repeat their enquiry"
-        style_class = "decision-warning"
+        color_class = "text-critical"
     elif priority == "Critical":
         decision = "Immediate transfer to Fraud & Security Specialist"
-        style_class = "decision-critical"
+        color_class = "text-critical"
     elif confidence < high_threshold:
         decision = "Transfer to General Customer Service Representative"
-        style_class = "decision-warning"
+        color_class = "text-standard"
     elif priority == "Standard":
         decision = f"Confirm '{friendly_intent}' with customer and route to Specialist Queue"
-        style_class = "decision-standard"
+        color_class = "text-standard"
     else:
         decision = f"Direct to Automated Voice Service for '{friendly_intent}'"
-        style_class = "decision-routine"
+        color_class = "text-routine"
 
     return {
         "Intent": friendly_intent,
         "Confidence": f"{confidence:.1%}",
         "Priority": priority,
         "Decision": decision,
-        "_style_class": style_class,
+        "_color_class": color_class,
     }
 
 
@@ -536,7 +522,7 @@ elif custom_text_fallback.strip():
     transcript_output = custom_text_fallback.strip()
 
 # ==============================================================================
-# Output Section: Analysis & Triage Decision (Single Unified Fixed Card)
+# Output Section: Analysis & Triage Decision (Transparent & Minimalist)
 # ==============================================================================
 if transcript_output:
     st.markdown(
@@ -547,21 +533,21 @@ if transcript_output:
     intent_predicted, conf_score = text2intent(transcript_output)
     triage = make_routing_decision(intent_predicted, conf_score)
 
-    card_html = (
-        f'<div class="triage-card">'
+    outcome_html = (
+        f'<div class="triage-container">'
         f'<div class="metrics-row">'
         f'<div class="metric-cell"><div class="cell-label">Predicted Intent</div><div class="cell-value">{triage["Intent"]}</div></div>'
         f'<div class="metric-cell"><div class="cell-label">Confidence Score</div><div class="cell-value">{triage["Confidence"]}</div></div>'
         f'<div class="metric-cell"><div class="cell-label">Priority Level</div><div class="cell-value">{triage["Priority"]}</div></div>'
         f'</div>'
-        f'<div class="decision-row {triage["_style_class"]}">'
+        f'<div class="decision-row">'
         f'<div class="cell-label">Action Decision</div>'
-        f'<div class="decision-text">{triage["Decision"]}</div>'
+        f'<div class="decision-text {triage["_color_class"]}">{triage["Decision"]}</div>'
         f'</div>'
         f'<div class="transcript-row">'
-        f'<div class="cell-label">Transcribed Spoken Enquiry</div>'
+        f'<div class="transcript-label">Transcribed Spoken Enquiry</div>'
         f'<div class="transcript-text">"{transcript_output}"</div>'
         f'</div>'
         f'</div>'
     )
-    st.markdown(card_html, unsafe_allow_html=True)
+    st.markdown(outcome_html, unsafe_allow_html=True)
